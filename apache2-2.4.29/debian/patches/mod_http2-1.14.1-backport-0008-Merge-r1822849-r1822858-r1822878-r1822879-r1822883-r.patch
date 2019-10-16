@@ -1,0 +1,298 @@
+From 082e9783a139db5117501adb7b9c6ff8d845dba8 Mon Sep 17 00:00:00 2001
+From: Yann Ylavic <ylavic@apache.org>
+Date: Tue, 29 May 2018 21:06:49 +0000
+Subject: [PATCH] Merge r1822849, r1822858, r1822878, r1822879, r1822883,
+ r1828485, r1828493 from trunk:
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+* When mod_http2 is loaded more then ThreadsPerChild backend connections can
+  be useful as mod_http2 has an additional thread pool on top of
+  ThreadsPerChild.
+  But leave the default with ThreadsPerChild.
+
+
+* Add some some comment why we do not limit hmax any longer
+
+
+mod_proxy: follow up to r1822849.
+
+Get the help(er) of mod_http2 to determine how much connections should
+be handled in the reslist by default (i.e. max_threads).
+
+
+mod_proxy: follow up to r1822849 and r1822878.
+
+Does r1822878's "static" APR_RETRIEVE_OPTIONAL_FN work if, say, mod_proxy is
+builtin but mod_http2 isn't?
+
+Not worth taking the risk here since it's not a fast path...
+
+Note: if this is an issue, I'm afraid it applies elsewhere too.
+
+
+mod_proxy: follow up to r1822849 and r1822879.
+
+Fix my maths, thanks Stefan and Rüdiger!
+
+
+needs mod_http2.h
+
+
+* Add missing CHANGES entry for revisions 1822849,1822858,1822878,1822879,1822883,1828485
+
+
+Submitted by: rpluem, ylavic, ylavic, ylavic, gsmith, rpluem
+Reviewed by: rpluem, jim, ylavic
+
+[Ubuntu note: added change to configure to let mod_proxy build find
+ mod_http2 header. --sbeattie]
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1832485 13f79535-47bb-0310-9956-ffa450edef68
+---
+ configure                   |    4 ++--
+ modules/http2/h2_config.c   |   24 ++++++++++++++++++++++++
+ modules/http2/h2_config.h   |    2 ++
+ modules/http2/h2_conn.c     |   13 +------------
+ modules/http2/mod_http2.c   |    6 ++++++
+ modules/http2/mod_http2.h   |    5 +++++
+ modules/proxy/config.m4     |    2 +-
+ modules/proxy/mod_proxy.dsp |    4 ++--
+ modules/proxy/proxy_util.c  |   30 ++++++++++++++++++++++++------
+ 9 files changed, 67 insertions(+), 23 deletions(-)
+
+# diff --git a/CHANGES b/CHANGES
+# index c55dccc098..9468c3ded7 100644
+# --- a/CHANGES
+# +++ b/CHANGES
+# @@ -1,6 +1,11 @@
+#                                                           -*- coding: utf-8 -*-
+#  Changes with Apache 2.4.34
+#  
+# +  *) mod_proxy: Do not restrict the maximum pool size for backend connections
+# +     any longer by the maximum number of threads per process and use a better
+# +     default if mod_http2 is loaded.
+# +     [Yann Ylavic, Ruediger Pluem, Stefan Eissing, Gregg Smith]
+# +
+#    *) core: Preserve the original HTTP request method in the '%<m' LogFormat
+#       when an path-based ErrorDocument is used.  PR 62186. 
+#       [Micha Lenk <micha lenk.info>]
+Index: b/modules/http2/h2_config.c
+===================================================================
+--- a/modules/http2/h2_config.c
++++ b/modules/http2/h2_config.c
+@@ -604,6 +604,30 @@ static const char *h2_conf_set_early_hin
+     return "value must be On or Off";
+ }
+ 
++void h2_get_num_workers(server_rec *s, int *minw, int *maxw)
++{
++    int threads_per_child = 0;
++    const h2_config *config = h2_config_sget(s);
++
++    *minw = h2_config_geti(config, H2_CONF_MIN_WORKERS);
++    *maxw = h2_config_geti(config, H2_CONF_MAX_WORKERS);    
++    ap_mpm_query(AP_MPMQ_MAX_THREADS, &threads_per_child);
++
++    if (*minw <= 0) {
++        *minw = threads_per_child;
++    }
++    if (*maxw <= 0) {
++        /* As a default, this seems to work quite well under mpm_event. 
++         * For people enabling http2 under mpm_prefork, start 4 threads unless 
++         * configured otherwise. People get unhappy if their http2 requests are 
++         * blocking each other. */
++        *maxw = 3 * (*minw) / 2;
++        if (*maxw < 4) {
++            *maxw = 4;
++        }
++    }
++}
++
+ #define AP_END_CMD     AP_INIT_TAKE1(NULL, NULL, NULL, RSRC_CONF, NULL)
+ 
+ const command_rec h2_cmds[] = {
+Index: b/modules/http2/h2_config.h
+===================================================================
+--- a/modules/http2/h2_config.h
++++ b/modules/http2/h2_config.h
+@@ -95,6 +95,8 @@ const h2_config *h2_config_rget(request_
+ int h2_config_geti(const h2_config *conf, h2_config_var_t var);
+ apr_int64_t h2_config_geti64(const h2_config *conf, h2_config_var_t var);
+ 
++void h2_get_num_workers(server_rec *s, int *minw, int *maxw);
++
+ void h2_config_init(apr_pool_t *pool);
+ 
+ const struct h2_priority *h2_config_get_priority(const h2_config *conf, 
+Index: b/modules/http2/h2_conn.c
+===================================================================
+--- a/modules/http2/h2_conn.c
++++ b/modules/http2/h2_conn.c
+@@ -127,18 +127,7 @@ apr_status_t h2_conn_child_init(apr_pool
+ 
+     h2_config_init(pool);
+     
+-    minw = h2_config_geti(config, H2_CONF_MIN_WORKERS);
+-    maxw = h2_config_geti(config, H2_CONF_MAX_WORKERS);    
+-    if (minw <= 0) {
+-        minw = max_threads_per_child;
+-    }
+-    if (maxw <= 0) {
+-        /* As a default, this seems to work quite well under mpm_event. 
+-         * For people enabling http2 under mpm_prefork, start 4 threads unless 
+-         * configured otherwise. People get unhappy if their http2 requests are 
+-         * blocking each other. */
+-        maxw = H2MAX(3 * minw / 2, 4);
+-    }
++    h2_get_num_workers(s, &minw, &maxw);
+     
+     idle_secs = h2_config_geti(config, H2_CONF_MAX_WORKER_IDLE_SECS);
+     ap_log_error(APLOG_MARK, APLOG_TRACE3, 0, s,
+Index: b/modules/http2/mod_http2.c
+===================================================================
+--- a/modules/http2/mod_http2.c
++++ b/modules/http2/mod_http2.c
+@@ -193,6 +193,11 @@ static void http2_req_engine_done(h2_req
+     h2_mplx_req_engine_done(ngn, r_conn, status);
+ }
+ 
++static void http2_get_num_workers(server_rec *s, int *minw, int *maxw)
++{
++    h2_get_num_workers(s, minw, maxw);
++}
++
+ /* Runs once per created child process. Perform any process 
+  * related initionalization here.
+  */
+@@ -218,6 +223,7 @@ static void h2_hooks(apr_pool_t *pool)
+     APR_REGISTER_OPTIONAL_FN(http2_req_engine_push);
+     APR_REGISTER_OPTIONAL_FN(http2_req_engine_pull);
+     APR_REGISTER_OPTIONAL_FN(http2_req_engine_done);
++    APR_REGISTER_OPTIONAL_FN(http2_get_num_workers);
+ 
+     ap_log_perror(APLOG_MARK, APLOG_TRACE1, 0, pool, "installing hooks");
+     
+Index: b/modules/http2/mod_http2.h
+===================================================================
+--- a/modules/http2/mod_http2.h
++++ b/modules/http2/mod_http2.h
+@@ -93,4 +93,9 @@ APR_DECLARE_OPTIONAL_FN(void,
+                         http2_req_engine_done, (h2_req_engine *engine, 
+                                                 conn_rec *rconn,
+                                                 apr_status_t status));
++
++APR_DECLARE_OPTIONAL_FN(void,
++                        http2_get_num_workers, (server_rec *s,
++                                                int *minw, int *max));
++
+ #endif
+Index: b/modules/proxy/config.m4
+===================================================================
+--- a/modules/proxy/config.m4
++++ b/modules/proxy/config.m4
+@@ -67,7 +67,7 @@ APACHE_MODULE(proxy_balancer, Apache pro
+ APACHE_MODULE(proxy_express, mass reverse-proxy module. Requires --enable-proxy., , , most, , proxy)
+ APACHE_MODULE(proxy_hcheck, [reverse-proxy health-check module. Requires --enable-proxy and --enable-watchdog.], , , most, , [proxy,watchdog])
+ 
+-APR_ADDTO(INCLUDES, [-I\$(top_srcdir)/$modpath_current])
++APR_ADDTO(INCLUDES, [-I\$(top_srcdir)/$modpath_current -I\$(top_srcdir)/modules/http2])
+ 
+ module_selection=$save_module_selection
+ module_default=$save_module_default
+Index: b/modules/proxy/mod_proxy.dsp
+===================================================================
+--- a/modules/proxy/mod_proxy.dsp
++++ b/modules/proxy/mod_proxy.dsp
+@@ -43,7 +43,7 @@ RSC=rc.exe
+ # PROP Ignore_Export_Lib 0
+ # PROP Target_Dir ""
+ # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
+-# ADD CPP /nologo /MD /W3 /O2 /Oy- /Zi /I "../ssl" /I "../../include" /I "../../srclib/apr/include" /I "../../srclib/apr-util/include" /I "../generators" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "PROXY_DECLARE_EXPORT" /Fd"Release\mod_proxy_src" /FD /c
++# ADD CPP /nologo /MD /W3 /O2 /Oy- /Zi /I "../ssl" /I "../http2" /I "../../include" /I "../../srclib/apr/include" /I "../../srclib/apr-util/include" /I "../generators" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "PROXY_DECLARE_EXPORT" /Fd"Release\mod_proxy_src" /FD /c
+ # ADD BASE MTL /nologo /D "NDEBUG" /win32
+ # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+ # ADD BASE RSC /l 0x809 /d "NDEBUG"
+@@ -75,7 +75,7 @@ PostBuild_Cmds=if exist $(TargetPath).ma
+ # PROP Ignore_Export_Lib 0
+ # PROP Target_Dir ""
+ # ADD BASE CPP /nologo /MDd /W3 /EHsc /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /c
+-# ADD CPP /nologo /MDd /W3 /EHsc /Zi /Od /I "../ssl" /I "../../include" /I "../../srclib/apr/include" /I "../../srclib/apr-util/include" /I "../generators" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "PROXY_DECLARE_EXPORT" /Fd"Debug\mod_proxy_src" /FD /c
++# ADD CPP /nologo /MDd /W3 /EHsc /Zi /Od /I "../ssl" /I "../http2" /I "../../include" /I "../../srclib/apr/include" /I "../../srclib/apr-util/include" /I "../generators" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "PROXY_DECLARE_EXPORT" /Fd"Debug\mod_proxy_src" /FD /c
+ # ADD BASE MTL /nologo /D "_DEBUG" /win32
+ # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+ # ADD BASE RSC /l 0x809 /d "_DEBUG"
+Index: b/modules/proxy/proxy_util.c
+===================================================================
+--- a/modules/proxy/proxy_util.c
++++ b/modules/proxy/proxy_util.c
+@@ -24,6 +24,8 @@
+ #include "ajp.h"
+ #include "scgi.h"
+ 
++#include "mod_http2.h" /* for http2_get_num_workers() */
++
+ #if APR_HAVE_UNISTD_H
+ #include <unistd.h>         /* for getpid() */
+ #endif
+@@ -1770,8 +1772,9 @@ PROXY_DECLARE(apr_status_t) ap_proxy_sha
+ 
+ PROXY_DECLARE(apr_status_t) ap_proxy_initialize_worker(proxy_worker *worker, server_rec *s, apr_pool_t *p)
+ {
++    APR_OPTIONAL_FN_TYPE(http2_get_num_workers) *get_h2_num_workers;
+     apr_status_t rv = APR_SUCCESS;
+-    int mpm_threads;
++    int max_threads, minw, maxw;
+ 
+     if (worker->s->status & PROXY_WORKER_INITIALIZED) {
+         /* The worker is already initialized */
+@@ -1795,11 +1798,26 @@ PROXY_DECLARE(apr_status_t) ap_proxy_ini
+             worker->s->is_address_reusable = 1;
+         }
+ 
+-        ap_mpm_query(AP_MPMQ_MAX_THREADS, &mpm_threads);
+-        if (mpm_threads > 1) {
+-            /* Set hard max to no more then mpm_threads */
+-            if (worker->s->hmax == 0 || worker->s->hmax > mpm_threads) {
+-                worker->s->hmax = mpm_threads;
++        /*
++         * When mod_http2 is loaded we might have more threads since it has
++         * its own pool of processing threads.
++         */
++        ap_mpm_query(AP_MPMQ_MAX_THREADS, &max_threads);
++        get_h2_num_workers = APR_RETRIEVE_OPTIONAL_FN(http2_get_num_workers);
++        if (get_h2_num_workers) {
++            get_h2_num_workers(s, &minw, &maxw);
++            /* So now the max is:
++             *   max_threads-1 threads for HTTP/1 each requiring one connection
++             *   + one thread for HTTP/2 requiring maxw connections
++             */
++            max_threads = max_threads - 1 + maxw;
++        }
++        if (max_threads > 1) {
++            /* Default hmax is max_threads to scale with the load and never
++             * wait for an idle connection to proceed.
++             */
++            if (worker->s->hmax == 0) {
++                worker->s->hmax = max_threads;
+             }
+             if (worker->s->smax == -1 || worker->s->smax > worker->s->hmax) {
+                 worker->s->smax = worker->s->hmax;
+Index: b/configure
+===================================================================
+--- a/configure
++++ b/configure
+@@ -25434,10 +25434,10 @@ EOF
+ 
+ 
+   if test "x$INCLUDES" = "x"; then
+-    test "x$silent" != "xyes" && echo "  setting INCLUDES to \"-I\$(top_srcdir)/$modpath_current\""
++    test "x$silent" != "xyes" && echo "  setting INCLUDES to \"-I\$(top_srcdir)/$modpath_current -I\$(top_srcdir)/modules/http2\""
+     INCLUDES="-I\$(top_srcdir)/$modpath_current"
+   else
+-    apr_addto_bugger="-I\$(top_srcdir)/$modpath_current"
++    apr_addto_bugger="-I\$(top_srcdir)/$modpath_current -I\$(top_srcdir)/modules/http2"
+     for i in $apr_addto_bugger; do
+       apr_addto_duplicate="0"
+       for j in $INCLUDES; do

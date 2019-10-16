@@ -1,0 +1,640 @@
+From a2d665e9757842e0e6dc5ff8402e648b895588ab Mon Sep 17 00:00:00 2001
+From: Jim Jagielski <jim@apache.org>
+Date: Fri, 15 Dec 2017 17:08:45 +0000
+Subject: [PATCH] docco fix... correct license/copyright info
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1818305 13f79535-47bb-0310-9956-ffa450edef68
+---
+ modules/http2/h2_alt_svc.c       | 16 ++++++++++++++++
+ modules/http2/h2_bucket_beam.c   | 16 ++++++++++++++++
+ modules/http2/h2_bucket_eos.c    | 16 ++++++++++++++++
+ modules/http2/h2_config.c        | 16 ++++++++++++++++
+ modules/http2/h2_conn.c          | 16 ++++++++++++++++
+ modules/http2/h2_conn_io.c       | 16 ++++++++++++++++
+ modules/http2/h2_ctx.c           | 16 ++++++++++++++++
+ modules/http2/h2_filter.c        | 16 ++++++++++++++++
+ modules/http2/h2_from_h1.c       | 16 ++++++++++++++++
+ modules/http2/h2_h2.c            | 16 ++++++++++++++++
+ modules/http2/h2_headers.c       | 16 ++++++++++++++++
+ modules/http2/h2_mplx.c          | 16 ++++++++++++++++
+ modules/http2/h2_ngn_shed.c      | 16 ++++++++++++++++
+ modules/http2/h2_proxy_session.c | 16 ++++++++++++++++
+ modules/http2/h2_proxy_util.c    | 16 ++++++++++++++++
+ modules/http2/h2_push.c          | 16 ++++++++++++++++
+ modules/http2/h2_request.c       | 16 ++++++++++++++++
+ modules/http2/h2_session.c       | 16 ++++++++++++++++
+ modules/http2/h2_stream.c        | 16 ++++++++++++++++
+ modules/http2/h2_switch.c        | 16 ++++++++++++++++
+ modules/http2/h2_task.c          | 16 ++++++++++++++++
+ modules/http2/h2_util.c          | 16 ++++++++++++++++
+ modules/http2/h2_workers.c       | 16 ++++++++++++++++
+ modules/http2/mod_http2.c        | 16 ++++++++++++++++
+ modules/http2/mod_proxy_http2.c  | 16 ++++++++++++++++
+ 25 files changed, 400 insertions(+)
+
+diff --git a/modules/http2/h2_alt_svc.c b/modules/http2/h2_alt_svc.c
+index 3dee9df0b6..b6a6e336ba 100644
+--- a/modules/http2/h2_alt_svc.c
++++ b/modules/http2/h2_alt_svc.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_bucket_beam.c b/modules/http2/h2_bucket_beam.c
+index 38291b0acf..33c791579e 100644
+--- a/modules/http2/h2_bucket_beam.c
++++ b/modules/http2/h2_bucket_beam.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_bucket_eos.c b/modules/http2/h2_bucket_eos.c
+index 4fe7ea725f..c89d499e10 100644
+--- a/modules/http2/h2_bucket_eos.c
++++ b/modules/http2/h2_bucket_eos.c
+@@ -13,6 +13,22 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
++ 
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
+ 
+ #include <assert.h>
+ #include <stddef.h>
+diff --git a/modules/http2/h2_config.c b/modules/http2/h2_config.c
+index 66e61558a3..d874458d15 100644
+--- a/modules/http2/h2_config.c
++++ b/modules/http2/h2_config.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_conn.c b/modules/http2/h2_conn.c
+index e2502c2f16..53497d03ef 100644
+--- a/modules/http2/h2_conn.c
++++ b/modules/http2/h2_conn.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_conn_io.c b/modules/http2/h2_conn_io.c
+index a526d11286..e673a06dcf 100644
+--- a/modules/http2/h2_conn_io.c
++++ b/modules/http2/h2_conn_io.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_ctx.c b/modules/http2/h2_ctx.c
+index e79b5f805d..a3e96514ca 100644
+--- a/modules/http2/h2_ctx.c
++++ b/modules/http2/h2_ctx.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_filter.c b/modules/http2/h2_filter.c
+index c1f1a847d2..180a4d2347 100644
+--- a/modules/http2/h2_filter.c
++++ b/modules/http2/h2_filter.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_from_h1.c b/modules/http2/h2_from_h1.c
+index 56f051ef8c..3a6bc6d4e8 100644
+--- a/modules/http2/h2_from_h1.c
++++ b/modules/http2/h2_from_h1.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_h2.c b/modules/http2/h2_h2.c
+index ce0247c480..8487e413f4 100644
+--- a/modules/http2/h2_h2.c
++++ b/modules/http2/h2_h2.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_headers.c b/modules/http2/h2_headers.c
+index ce7eaec2b3..e80a34f367 100644
+--- a/modules/http2/h2_headers.c
++++ b/modules/http2/h2_headers.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_mplx.c b/modules/http2/h2_mplx.c
+index 6c96102b54..ebe85d6989 100644
+--- a/modules/http2/h2_mplx.c
++++ b/modules/http2/h2_mplx.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_ngn_shed.c b/modules/http2/h2_ngn_shed.c
+index 27474ba22d..b536b673f7 100644
+--- a/modules/http2/h2_ngn_shed.c
++++ b/modules/http2/h2_ngn_shed.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_proxy_session.c b/modules/http2/h2_proxy_session.c
+index 458a12a03c..0312ff83ad 100644
+--- a/modules/http2/h2_proxy_session.c
++++ b/modules/http2/h2_proxy_session.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_proxy_util.c b/modules/http2/h2_proxy_util.c
+index 206020fd87..54cb013f6b 100644
+--- a/modules/http2/h2_proxy_util.c
++++ b/modules/http2/h2_proxy_util.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_push.c b/modules/http2/h2_push.c
+index 307c944742..b9a06e3c06 100644
+--- a/modules/http2/h2_push.c
++++ b/modules/http2/h2_push.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_request.c b/modules/http2/h2_request.c
+index dea676223d..7f4ab21669 100644
+--- a/modules/http2/h2_request.c
++++ b/modules/http2/h2_request.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_session.c b/modules/http2/h2_session.c
+index da85d7053f..7ea38e34eb 100644
+--- a/modules/http2/h2_session.c
++++ b/modules/http2/h2_session.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_stream.c b/modules/http2/h2_stream.c
+index 1e87b1cbba..0ef45ae304 100644
+--- a/modules/http2/h2_stream.c
++++ b/modules/http2/h2_stream.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_switch.c b/modules/http2/h2_switch.c
+index 5b1247ec70..3a8567eb1b 100644
+--- a/modules/http2/h2_switch.c
++++ b/modules/http2/h2_switch.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_task.c b/modules/http2/h2_task.c
+index 1f2f4c2578..bff7c8aa0e 100644
+--- a/modules/http2/h2_task.c
++++ b/modules/http2/h2_task.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_util.c b/modules/http2/h2_util.c
+index 47dcdf56b2..9bf3787db7 100644
+--- a/modules/http2/h2_util.c
++++ b/modules/http2/h2_util.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/h2_workers.c b/modules/http2/h2_workers.c
+index e976df94cf..e455612bf4 100644
+--- a/modules/http2/h2_workers.c
++++ b/modules/http2/h2_workers.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/mod_http2.c b/modules/http2/mod_http2.c
+index 420e74c336..6f785b832b 100644
+--- a/modules/http2/mod_http2.c
++++ b/modules/http2/mod_http2.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+diff --git a/modules/http2/mod_proxy_http2.c b/modules/http2/mod_proxy_http2.c
+index 5b2a798996..c1bb15edb4 100644
+--- a/modules/http2/mod_proxy_http2.c
++++ b/modules/http2/mod_proxy_http2.c
+@@ -1,3 +1,19 @@
++/* Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ 
+ /* Copyright 2015 greenbytes GmbH (https://www.greenbytes.de)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+-- 
+2.17.1
+
