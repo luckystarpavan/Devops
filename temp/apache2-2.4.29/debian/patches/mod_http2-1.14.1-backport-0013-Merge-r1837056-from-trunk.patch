@@ -1,0 +1,265 @@
+From fbf8099a2148e21d0d31ce115e4937cf54ffb925 Mon Sep 17 00:00:00 2001
+From: Stefan Eissing <icing@apache.org>
+Date: Tue, 11 Sep 2018 14:04:53 +0000
+Subject: [PATCH] Merge r1837056 from trunk:
+
+  *) http: Enforce consistently no response body with both 204 and 304
+     statuses.  [Yann Ylavic]
+
+
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1840572 13f79535-47bb-0310-9956-ffa450edef68
+---
+ CHANGES                        |  3 +++
+ include/httpd.h                |  4 ++++
+ modules/filters/mod_brotli.c   |  5 +++--
+ modules/filters/mod_deflate.c  | 12 +++++++-----
+ modules/http/http_filters.c    | 15 +++++++++------
+ modules/http/http_protocol.c   | 25 ++++++++++---------------
+ modules/http2/h2_from_h1.c     | 12 ++++++++++--
+ modules/proxy/mod_proxy_http.c |  4 +---
+ server/protocol.c              |  2 +-
+ 9 files changed, 48 insertions(+), 34 deletions(-)
+
+# diff --git a/CHANGES b/CHANGES
+# index 05ecb85370..6e22d76086 100644
+# --- a/CHANGES
+# +++ b/CHANGES
+# @@ -1,6 +1,9 @@
+#                                                           -*- coding: utf-8 -*-
+#  Changes with Apache 2.4.35
+#  
+# +  *) http: Enforce consistently no response body with both 204 and 304
+# +     statuses.  [Yann Ylavic]
+# +
+#    *) mod_status: Cumulate CPU time of exited child processes in the
+#       "cu" and "cs" values. Add CPU time of the parent process to the
+#       "c" and "s" values.
+
+[Ubuntu note: adjusted first http_filters.c for version in 2.4.29 --sbeattie]
+
+diff --git a/include/httpd.h b/include/httpd.h
+index d792308581..65392f8354 100644
+--- a/include/httpd.h
++++ b/include/httpd.h
+@@ -568,6 +568,10 @@ AP_DECLARE(const char *) ap_get_server_built(void);
+                                     ((x) == HTTP_INTERNAL_SERVER_ERROR) || \
+                                     ((x) == HTTP_SERVICE_UNAVAILABLE) || \
+                                     ((x) == HTTP_NOT_IMPLEMENTED))
++
++/** does the status imply header only response (i.e. never w/ a body)? */
++#define AP_STATUS_IS_HEADER_ONLY(x) ((x) == HTTP_NO_CONTENT || \
++                                     (x) == HTTP_NOT_MODIFIED)
+ /** @} */
+ 
+ /**
+diff --git a/modules/filters/mod_brotli.c b/modules/filters/mod_brotli.c
+index dd91f6e703..024f6b760e 100644
+--- a/modules/filters/mod_brotli.c
++++ b/modules/filters/mod_brotli.c
+@@ -346,11 +346,12 @@ static apr_status_t compress_filter(ap_filter_t *f, apr_bucket_brigade *bb)
+         const char *accepts;
+ 
+         /* Only work on main request, not subrequests, that are not
+-         * a 204 response with no content, and are not tagged with the
++         * responses with no content (204/304), and are not tagged with the
+          * no-brotli env variable, and are not a partial response to
+          * a Range request.
+          */
+-        if (r->main || r->status == HTTP_NO_CONTENT
++        if (r->main
++            || AP_STATUS_IS_HEADER_ONLY(r->status)
+             || apr_table_get(r->subprocess_env, "no-brotli")
+             || apr_table_get(r->headers_out, "Content-Range")) {
+             ap_remove_output_filter(f);
+diff --git a/modules/filters/mod_deflate.c b/modules/filters/mod_deflate.c
+index 142846089f..d218bab83c 100644
+--- a/modules/filters/mod_deflate.c
++++ b/modules/filters/mod_deflate.c
+@@ -602,18 +602,19 @@ static apr_status_t deflate_out_filter(ap_filter_t *f,
+ 
+         /*
+          * Only work on main request, not subrequests,
+-         * that are not a 204 response with no content
++         * that are not responses with no content (204/304),
+          * and are not tagged with the no-gzip env variable
+          * and not a partial response to a Range request.
+          */
+-        if ((r->main != NULL) || (r->status == HTTP_NO_CONTENT) ||
++        if ((r->main != NULL) ||
++            AP_STATUS_IS_HEADER_ONLY(r->status) ||
+             apr_table_get(r->subprocess_env, "no-gzip") ||
+             apr_table_get(r->headers_out, "Content-Range")
+            ) {
+             if (APLOG_R_IS_LEVEL(r, APLOG_TRACE1)) {
+                 const char *reason =
+                     (r->main != NULL)                           ? "subrequest" :
+-                    (r->status == HTTP_NO_CONTENT)              ? "no content" :
++                    AP_STATUS_IS_HEADER_ONLY(r->status)         ? "no content" :
+                     apr_table_get(r->subprocess_env, "no-gzip") ? "no-gzip" :
+                     "content-range";
+                 ap_log_rerror(APLOG_MARK, APLOG_TRACE1, 0, r,
+@@ -1524,11 +1525,12 @@ static apr_status_t inflate_out_filter(ap_filter_t *f,
+ 
+         /*
+          * Only work on main request, not subrequests,
+-         * that are not a 204 response with no content
++         * that are not responses with no content (204/304),
+          * and not a partial response to a Range request,
+          * and only when Content-Encoding ends in gzip.
+          */
+-        if (!ap_is_initial_req(r) || (r->status == HTTP_NO_CONTENT) ||
++        if (!ap_is_initial_req(r) ||
++            AP_STATUS_IS_HEADER_ONLY(r->status) ||
+             (apr_table_get(r->headers_out, "Content-Range") != NULL) ||
+             (check_gzip(r, r->headers_out, r->err_headers_out) == 0)
+            ) {
+diff --git a/modules/http/http_filters.c b/modules/http/http_filters.c
+index 37c0113e5b..9828cdfcfb 100644
+--- a/modules/http/http_filters.c
++++ b/modules/http/http_filters.c
+@@ -1307,7 +1307,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
+     }
+     else if (ctx->headers_sent) {
+         /* Eat body if response must not have one. */
+-        if (r->header_only || r->status == HTTP_NO_CONTENT) {
++        if (r->header_only || AP_STATUS_IS_HEADER_ONLY(r->status)) {
+             apr_brigade_cleanup(b);
+             return APR_SUCCESS;
+         }
+@@ -1423,12 +1423,15 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
+     basic_http_header_check(r, &protocol);
+     ap_set_keepalive(r);
+ 
+-    if (r->chunked) {
+-        apr_table_mergen(r->headers_out, "Transfer-Encoding", "chunked");
++    if (AP_STATUS_IS_HEADER_ONLY(r->status)) {
++        apr_table_unset(r->headers_out, "Transfer-Encoding");
+         apr_table_unset(r->headers_out, "Content-Length");
++        r->content_type = r->content_encoding = NULL;
++        r->content_languages = NULL;
++        r->clength = r->chunked = 0;
+     }
+-
+-    if (r->status == HTTP_NO_CONTENT) {
++    else if (r->chunked) {
++        apr_table_mergen(r->headers_out, "Transfer-Encoding", "chunked");
+         apr_table_unset(r->headers_out, "Content-Length");
+     }
+ 
+@@ -1525,7 +1528,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
+     }
+     ctx->headers_sent = 1;
+ 
+-    if (r->header_only || r->status == HTTP_NO_CONTENT) {
++    if (r->header_only || AP_STATUS_IS_HEADER_ONLY(r->status)) {
+         apr_brigade_cleanup(b);
+         goto out;
+     }
+diff --git a/modules/http/http_protocol.c b/modules/http/http_protocol.c
+index 8543fd1925..e419eb6cd4 100644
+--- a/modules/http/http_protocol.c
++++ b/modules/http/http_protocol.c
+@@ -254,9 +254,8 @@ AP_DECLARE(int) ap_set_keepalive(request_rec *r)
+      */
+     if ((r->connection->keepalive != AP_CONN_CLOSE)
+         && !r->expecting_100
+-        && ((r->status == HTTP_NOT_MODIFIED)
+-            || (r->status == HTTP_NO_CONTENT)
+-            || r->header_only
++        && (r->header_only
++            || AP_STATUS_IS_HEADER_ONLY(r->status)
+             || apr_table_get(r->headers_out, "Content-Length")
+             || ap_find_last_token(r->pool,
+                                   apr_table_get(r->headers_out,
+@@ -1402,26 +1401,22 @@ AP_DECLARE(void) ap_send_error_response(request_rec *r, int recursive_error)
+ 
+     ap_run_insert_error_filter(r);
+ 
+-    /*
+-     * It's possible that the Location field might be in r->err_headers_out
+-     * instead of r->headers_out; use the latter if possible, else the
+-     * former.
+-     */
+-    if (location == NULL) {
+-        location = apr_table_get(r->err_headers_out, "Location");
+-    }
+     /* We need to special-case the handling of 204 and 304 responses,
+      * since they have specific HTTP requirements and do not include a
+      * message body.  Note that being assbackwards here is not an option.
+      */
+-    if (status == HTTP_NOT_MODIFIED) {
++    if (AP_STATUS_IS_HEADER_ONLY(status)) {
+         ap_finalize_request_protocol(r);
+         return;
+     }
+ 
+-    if (status == HTTP_NO_CONTENT) {
+-        ap_finalize_request_protocol(r);
+-        return;
++    /*
++     * It's possible that the Location field might be in r->err_headers_out
++     * instead of r->headers_out; use the latter if possible, else the
++     * former.
++     */
++    if (location == NULL) {
++        location = apr_table_get(r->err_headers_out, "Location");
+     }
+ 
+     if (!r->assbackwards) {
+diff --git a/modules/http2/h2_from_h1.c b/modules/http2/h2_from_h1.c
+index ae264a9341..24e0c6984d 100644
+--- a/modules/http2/h2_from_h1.c
++++ b/modules/http2/h2_from_h1.c
+@@ -209,10 +209,18 @@ static h2_headers *create_response(h2_task *task, request_rec *r)
+     /* determine the protocol and whether we should use keepalives. */
+     ap_set_keepalive(r);
+     
+-    if (r->chunked) {
++    if (AP_STATUS_IS_HEADER_ONLY(r->status)) {
++        apr_table_unset(r->headers_out, "Transfer-Encoding");
+         apr_table_unset(r->headers_out, "Content-Length");
++        r->content_type = r->content_encoding = NULL;
++        r->content_languages = NULL;
++        r->clength = r->chunked = 0;
+     }
+-    
++    else if (r->chunked) {
++        apr_table_mergen(r->headers_out, "Transfer-Encoding", "chunked");
++        apr_table_unset(r->headers_out, "Content-Length");
++    }
++
+     ctype = ap_make_content_type(r, r->content_type);
+     if (ctype) {
+         apr_table_setn(r->headers_out, "Content-Type", ctype);
+diff --git a/modules/proxy/mod_proxy_http.c b/modules/proxy/mod_proxy_http.c
+index e80a24c66f..56af9a8331 100644
+--- a/modules/proxy/mod_proxy_http.c
++++ b/modules/proxy/mod_proxy_http.c
+@@ -1623,9 +1623,7 @@ apr_status_t ap_proxy_http_process_response(apr_pool_t * p, request_rec *r,
+              */
+             r->status = HTTP_OK;
+             /* Discard body, if one is expected */
+-            if (!r->header_only && /* not HEAD request */
+-                (proxy_status != HTTP_NO_CONTENT) && /* not 204 */
+-                (proxy_status != HTTP_NOT_MODIFIED)) { /* not 304 */
++        if (!r->header_only && !AP_STATUS_IS_HEADER_ONLY(proxy_status)) {
+                 const char *tmp;
+                 /* Add minimal headers needed to allow http_in filter
+                  * detecting end of body without waiting for a timeout. */
+diff --git a/server/protocol.c b/server/protocol.c
+index 2ca6b124a8..8d90055b8d 100644
+--- a/server/protocol.c
++++ b/server/protocol.c
+@@ -1840,7 +1840,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
+          * such filters update or remove the C-L header, and just use it
+          * if present.
+          */
+-        !(r->header_only && r->bytes_sent == 0 &&
++        !((r->header_only || AP_STATUS_IS_HEADER_ONLY(r->status)) && r->bytes_sent == 0 &&
+             apr_table_get(r->headers_out, "Content-Length"))) {
+         ap_set_content_length(r, r->bytes_sent);
+     }
+-- 
+2.17.1
+

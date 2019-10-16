@@ -1,0 +1,12 @@
+apache2 (2.4.29-1ubuntu4.10) bionic-security; urgency=medium
+
+  - To address HTTP/2 issues CVE-2019-9517, CVE-2019-0197,
+    CVE-2019-10081, and CVE-2019-10082, mod_http2 from 2.4.41 (aka
+    v1.15.4) was backported into this release of apache2, which
+    includes additional bug fixes as well.
+
+  - For CVE-2019-10098, PCRE_DOTALL flag is by default by default to
+    avoid unpredictable matches and substitutions with encoded line
+    break characters mod_rewrite and the apache core.
+
+ -- Steve Beattie <sbeattie@ubuntu.com>  Mon, 26 Aug 2019 06:41:43 -0700

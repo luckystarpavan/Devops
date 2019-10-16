@@ -1,0 +1,108 @@
+From de763e5619bd7b6c657d0d4806566b72b1b9a102 Mon Sep 17 00:00:00 2001
+From: Jim Jagielski <jim@apache.org>
+Date: Wed, 30 May 2018 19:13:36 +0000
+Subject: [PATCH] Merge r1830562 from trunk:
+
+On the trunk:
+
+mod_http2: restoring the v1.10.16 keepalive timeout behavioud of mod_http2 (to be verified).
+
+ALSO: mod_http2: adding regular memory cleanup when transferring large response bodies. This
+      reduces memory footprint and avoids memory exhaustion when transferring large files
+      on 32-bit architectures. Fixes PR 62325.
+
+Submitted by: icing
+Reviewed by: icing, ylavic, jim
+
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1832566 13f79535-47bb-0310-9956-ffa450edef68
+---
+ STATUS                         | 10 ----------
+ modules/http2/h2_bucket_beam.c |  1 +
+ modules/http2/h2_conn.c        | 14 +++++++++++++-
+ modules/http2/h2_version.h     |  4 ++--
+ 4 files changed, 16 insertions(+), 13 deletions(-)
+
+# diff --git a/STATUS b/STATUS
+# index b0da0b710b..ce3de8aba2 100644
+# --- a/STATUS
+# +++ b/STATUS
+# @@ -135,16 +135,6 @@ RELEASE SHOWSTOPPERS:
+#  PATCHES ACCEPTED TO BACKPORT FROM TRUNK:
+#    [ start all new proposals below, under PATCHES PROPOSED. ]
+#  
+# -  *) mod_http2: Restore keepalive timing of v1.10.16, see https://github.com/icing/mod_h2/issues/160.
+# -     trunk patch: http://svn.apache.org/1830562
+# -     2.4.x patch: https://svn.apache.org/repos/asf/httpd/httpd/patches/2.4.x/h2_keepalive_restore.patch
+# -     +1: icing, ylavic, jim
+# -
+# -  *) mod_http2: adding regular memory cleanup when transferring large response bodies. This
+# -     reduces memory footprint and avoids memory exhaustion when transferring large files
+# -     on 32-bit architectures. Fixes PR 62325.
+# -     2.4.x patch: https://svn.apache.org/repos/asf/httpd/httpd/patches/2.4.x/h2_beam_purge.patch
+# -     +1: icing, ylavic, jim
+#  
+#  
+#  PATCHES PROPOSED TO BACKPORT FROM TRUNK:
+diff --git a/modules/http2/h2_bucket_beam.c b/modules/http2/h2_bucket_beam.c
+index 7653ec1092..9f6fa824f6 100644
+--- a/modules/http2/h2_bucket_beam.c
++++ b/modules/http2/h2_bucket_beam.c
+@@ -923,6 +923,7 @@ apr_status_t h2_beam_send(h2_bucket_beam *beam,
+             while (!APR_BRIGADE_EMPTY(sender_bb) && APR_SUCCESS == rv) {
+                 if (space_left <= 0) {
+                     report_prod_io(beam, force_report, &bl);
++                    r_purge_sent(beam);
+                     rv = wait_not_full(beam, block, &space_left, &bl);
+                     if (APR_SUCCESS != rv) {
+                         break;
+diff --git a/modules/http2/h2_conn.c b/modules/http2/h2_conn.c
+index 862d4c1959..2e956593aa 100644
+--- a/modules/http2/h2_conn.c
++++ b/modules/http2/h2_conn.c
+@@ -229,7 +229,19 @@ apr_status_t h2_conn_run(struct h2_ctx *ctx, conn_rec *c)
+              && mpm_state != AP_MPMQ_STOPPING);
+ 
+     if (c->cs) {
+-        c->cs->state = CONN_STATE_LINGER;
++        switch (session->state) {
++            case H2_SESSION_ST_INIT:
++            case H2_SESSION_ST_IDLE:
++            case H2_SESSION_ST_BUSY:
++            case H2_SESSION_ST_WAIT:
++                c->cs->state = CONN_STATE_WRITE_COMPLETION;
++                break;
++            case H2_SESSION_ST_CLEANUP:
++            case H2_SESSION_ST_DONE:
++            default:
++                c->cs->state = CONN_STATE_LINGER;
++            break;
++        }
+     }
+ 
+     return APR_SUCCESS;
+diff --git a/modules/http2/h2_version.h b/modules/http2/h2_version.h
+index 50cfd118ae..5c53abd575 100644
+--- a/modules/http2/h2_version.h
++++ b/modules/http2/h2_version.h
+@@ -27,7 +27,7 @@
+  * @macro
+  * Version number of the http2 module as c string
+  */
+-#define MOD_HTTP2_VERSION "1.10.17"
++#define MOD_HTTP2_VERSION "1.10.20"
+ 
+ /**
+  * @macro
+@@ -35,7 +35,7 @@
+  * release. This is a 24 bit number with 8 bits for major number, 8 bits
+  * for minor and 8 bits for patch. Version 1.2.3 becomes 0x010203.
+  */
+-#define MOD_HTTP2_VERSION_NUM 0x010a11
++#define MOD_HTTP2_VERSION_NUM 0x010a14
+ 
+ 
+ #endif /* mod_h2_h2_version_h */
+-- 
+2.17.1
+
