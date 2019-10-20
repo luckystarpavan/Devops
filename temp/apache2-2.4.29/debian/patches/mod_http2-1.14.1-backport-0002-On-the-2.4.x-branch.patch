@@ -1,0 +1,73 @@
+From a1f0d012b26a0967e2439e06f03b407040739031 Mon Sep 17 00:00:00 2001
+From: Stefan Eissing <icing@apache.org>
+Date: Sat, 2 Dec 2017 17:51:37 +0000
+Subject: [PATCH] On the 2.4.x branch:
+
+Fixed backport of r1816619 (mod_http2) to have the desired changes and added the version inc as well.
+
+
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1816969 13f79535-47bb-0310-9956-ffa450edef68
+---
+ modules/http2/h2_version.h |  4 ++--
+ modules/http2/h2_workers.c | 15 +++++++++++++--
+ 2 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/modules/http2/h2_version.h b/modules/http2/h2_version.h
+index 4c0796dce3..4cf366f434 100644
+--- a/modules/http2/h2_version.h
++++ b/modules/http2/h2_version.h
+@@ -26,7 +26,7 @@
+  * @macro
+  * Version number of the http2 module as c string
+  */
+-#define MOD_HTTP2_VERSION "1.10.13"
++#define MOD_HTTP2_VERSION "1.10.14"
+ 
+ /**
+  * @macro
+@@ -34,7 +34,7 @@
+  * release. This is a 24 bit number with 8 bits for major number, 8 bits
+  * for minor and 8 bits for patch. Version 1.2.3 becomes 0x010203.
+  */
+-#define MOD_HTTP2_VERSION_NUM 0x010a0d
++#define MOD_HTTP2_VERSION_NUM 0x010a0e
+ 
+ 
+ #endif /* mod_h2_h2_version_h */
+diff --git a/modules/http2/h2_workers.c b/modules/http2/h2_workers.c
+index 1276250644..2df92b2354 100644
+--- a/modules/http2/h2_workers.c
++++ b/modules/http2/h2_workers.c
+@@ -160,7 +160,7 @@ static apr_status_t slot_pull_task(h2_slot *slot, h2_mplx *m)
+          * If we still have idle workers, we let the worker be sticky, 
+          * e.g. making it poll the task's h2_mplx instance for more work 
+          * before asking back here. */
+-        slot->sticks = slot->workers->max_workers;
++        slot->sticks = 1;/*slot->workers->max_workers;*/
+         return rv;            
+     }
+     slot->sticks = 0;
+@@ -305,7 +305,18 @@ h2_workers *h2_workers_create(server_rec *s, apr_pool_t *server_pool,
+     workers->max_workers = max_workers;
+     workers->max_idle_secs = (idle_secs > 0)? idle_secs : 10;
+ 
+-    status = h2_fifo_create(&workers->mplxs, pool, 2 * workers->max_workers);
++    /* FIXME: the fifo set we use here has limited capacity. Once the
++     * set is full, connections with new requests do a wait. Unfortunately,
++     * we have optimizations in place there that makes such waiting "unfair"
++     * in the sense that it may take connections a looong time to get scheduled.
++     *
++     * Need to rewrite this to use one of our double-linked lists and a mutex
++     * to have unlimited capacity and fair scheduling.
++     *
++     * For now, we just make enough room to have many connections inside one
++     * process.
++     */
++    status = h2_fifo_set_create(&workers->mplxs, pool, 8 * 1024);
+     if (status != APR_SUCCESS) {
+         return NULL;
+     }
+-- 
+2.17.1
+

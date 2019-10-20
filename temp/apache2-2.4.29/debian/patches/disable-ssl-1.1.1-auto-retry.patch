@@ -1,0 +1,41 @@
+From bbedd8b80e50647e09f2937455cc57565d94a844 Mon Sep 17 00:00:00 2001
+From: Joe Orton <jorton@apache.org>
+Date: Wed, 12 Sep 2018 15:54:59 +0000
+Subject: [PATCH] Merge r1840710 from trunk:
+
+* modules/ssl/ssl_engine_init.c (ssl_init_ctx_protocol):
+  Disable AUTO_RETRY mode for OpenSSL 1.1.1, which fixes
+  post-handshake authentication.
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/tlsv1.3-for-2.4.x@1840711 13f79535-47bb-0310-9956-ffa450edef68
+---
+ modules/ssl/ssl_engine_init.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+ Ubuntu note: the second hunk of the patch, modifying ssl_init_proxy_certs(),
+ was dropped from this patch because the post-handshake authentication is only
+ available in TLSv1.3, which is not available in this version of Apache. The hunk
+ that was kept does affect TLSv1.2, however.
+
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/apache2/+bug/1833039
+Origin: upstream, https://github.com/apache/httpd/commit/bbedd8b80e50647e09f2937455cc57565d94a844
+Last-Update: 2019-06-28
+
+diff --git a/modules/ssl/ssl_engine_init.c b/modules/ssl/ssl_engine_init.c
+index 85d43376b2a..b7b2be796c2 100644
+--- a/modules/ssl/ssl_engine_init.c
++++ b/modules/ssl/ssl_engine_init.c
+@@ -761,6 +761,13 @@ static apr_status_t ssl_init_ctx_protocol(server_rec *s,
+         SSL_CTX_set_mode(ctx, SSL_MODE_RELEASE_BUFFERS);
+ #endif
+ 
++#if OPENSSL_VERSION_NUMBER >= 0x1010100fL
++    /* For OpenSSL >=1.1.1, disable auto-retry mode so it's possible
++     * to consume handshake records without blocking for app-data.
++     * https://github.com/openssl/openssl/issues/7178 */
++    SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
++#endif
++    
+     return APR_SUCCESS;
+ }
+ 

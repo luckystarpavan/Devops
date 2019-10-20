@@ -1,0 +1,192 @@
+From 06a6f30c77bf5fcd4a1a8e4919738dc039382067 Mon Sep 17 00:00:00 2001
+From: Stefan Eissing <icing@apache.org>
+Date: Mon, 6 Nov 2017 15:20:24 +0000
+Subject: [PATCH] On the 2.4.x branch:
+
+Merge of r1813767 from trunk.
+
+mod_http2: avoid unnecessary data retrieval for a trace log. Allow certain
+     information retrievals on null bucket beams where it makes sense.
+
+
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1814420 13f79535-47bb-0310-9956-ffa450edef68
+---
+ CHANGES                        |  2 ++
+ STATUS                         |  6 ------
+ modules/http2/h2_bucket_beam.c | 20 ++++++++++----------
+ modules/http2/h2_mplx.c        | 11 ++++++-----
+ modules/http2/h2_version.h     |  4 ++--
+ 5 files changed, 20 insertions(+), 23 deletions(-)
+
+#diff --git a/CHANGES b/CHANGES
+#index fb9ba7c075..0449324bca 100644
+#--- a/CHANGES
+#+++ b/CHANGES
+#@@ -1,6 +1,8 @@
+#                                                          -*- coding: utf-8 -*-
+# Changes with Apache 2.4.30
+# 
+#+  *) mod_http2: avoid unnecessary data retrieval for a trace log. Allow certain
+#+     information retrievals on null bucket beams where it makes sense. [Stefan Eissing]
+# 
+# Changes with Apache 2.4.29
+# 
+#diff --git a/STATUS b/STATUS
+#index e99ac95a8b..6d7af3dad1 100644
+#--- a/STATUS
+#+++ b/STATUS
+#@@ -132,12 +132,6 @@ PATCHES ACCEPTED TO BACKPORT FROM TRUNK:
+#      2.4.x: svn merge -c 1811744 ^/httpd/httpd/trunk .
+#      +1: elukey, icing, ylavic
+# 
+#-  *) mod_http2: avoid unnecessary data retrieval for a trace log. Allow certain
+#-     information retrievals on null bucket beams where it makes sense.
+#-     trunk patch: https://svn.apache.org/r1813767
+#-     2.4.x patch: https://svn.apache.org/repos/asf/httpd/httpd/patches/2.4.x/mod_http2_v1.10.13.diff
+#-     +1: icing, ylavic, steffenal
+#-     
+# 
+# PATCHES PROPOSED TO BACKPORT FROM TRUNK:
+#   [ New proposals should be added at the end of the list ]
+diff --git a/modules/http2/h2_bucket_beam.c b/modules/http2/h2_bucket_beam.c
+index 6b8c645be2..38291b0acf 100644
+--- a/modules/http2/h2_bucket_beam.c
++++ b/modules/http2/h2_bucket_beam.c
+@@ -663,7 +663,7 @@ apr_size_t h2_beam_buffer_size_get(h2_bucket_beam *beam)
+     h2_beam_lock bl;
+     apr_size_t buffer_size = 0;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         buffer_size = beam->max_buf_size;
+         leave_yellow(beam, &bl);
+     }
+@@ -696,7 +696,7 @@ void h2_beam_abort(h2_bucket_beam *beam)
+ {
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         if (!beam->aborted) {
+             beam->aborted = 1;
+             r_purge_sent(beam);
+@@ -712,7 +712,7 @@ apr_status_t h2_beam_close(h2_bucket_beam *beam)
+ {
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         r_purge_sent(beam);
+         beam_close(beam);
+         report_consumption(beam, &bl);
+@@ -725,7 +725,7 @@ apr_status_t h2_beam_leave(h2_bucket_beam *beam)
+ {
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         recv_buffer_cleanup(beam, &bl);
+         beam->aborted = 1;
+         beam_close(beam);
+@@ -1165,7 +1165,7 @@ apr_off_t h2_beam_get_buffered(h2_bucket_beam *beam)
+     apr_off_t l = 0;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         for (b = H2_BLIST_FIRST(&beam->send_list); 
+             b != H2_BLIST_SENTINEL(&beam->send_list);
+             b = APR_BUCKET_NEXT(b)) {
+@@ -1183,7 +1183,7 @@ apr_off_t h2_beam_get_mem_used(h2_bucket_beam *beam)
+     apr_off_t l = 0;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         for (b = H2_BLIST_FIRST(&beam->send_list); 
+             b != H2_BLIST_SENTINEL(&beam->send_list);
+             b = APR_BUCKET_NEXT(b)) {
+@@ -1199,7 +1199,7 @@ int h2_beam_empty(h2_bucket_beam *beam)
+     int empty = 1;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         empty = (H2_BLIST_EMPTY(&beam->send_list) 
+                  && (!beam->recv_buffer || APR_BRIGADE_EMPTY(beam->recv_buffer)));
+         leave_yellow(beam, &bl);
+@@ -1212,7 +1212,7 @@ int h2_beam_holds_proxies(h2_bucket_beam *beam)
+     int has_proxies = 1;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         has_proxies = !H2_BPROXY_LIST_EMPTY(&beam->proxies);
+         leave_yellow(beam, &bl);
+     }
+@@ -1224,7 +1224,7 @@ int h2_beam_was_received(h2_bucket_beam *beam)
+     int happend = 0;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         happend = (beam->received_bytes > 0);
+         leave_yellow(beam, &bl);
+     }
+@@ -1236,7 +1236,7 @@ apr_size_t h2_beam_get_files_beamed(h2_bucket_beam *beam)
+     apr_size_t n = 0;
+     h2_beam_lock bl;
+     
+-    if (enter_yellow(beam, &bl) == APR_SUCCESS) {
++    if (beam && enter_yellow(beam, &bl) == APR_SUCCESS) {
+         n = beam->files_beamed;
+         leave_yellow(beam, &bl);
+     }
+diff --git a/modules/http2/h2_mplx.c b/modules/http2/h2_mplx.c
+index fe73cce3f8..6c96102b54 100644
+--- a/modules/http2/h2_mplx.c
++++ b/modules/http2/h2_mplx.c
+@@ -377,11 +377,12 @@ static int report_stream_iter(void *ctx, void *val) {
+     h2_mplx *m = ctx;
+     h2_stream *stream = val;
+     h2_task *task = stream->task;
+-    ap_log_cerror(APLOG_MARK, APLOG_TRACE1, 0, m->c,
+-                  H2_STRM_MSG(stream, "started=%d, scheduled=%d, ready=%d, "
+-                              "out_buffer=%ld"), 
+-                  !!stream->task, stream->scheduled, h2_stream_is_ready(stream),
+-                  (long)h2_beam_get_buffered(stream->output));
++    if (APLOGctrace1(m->c)) {
++        ap_log_cerror(APLOG_MARK, APLOG_TRACE1, 0, m->c,
++                      H2_STRM_MSG(stream, "started=%d, scheduled=%d, ready=%d, out_buffer=%ld"), 
++                      !!stream->task, stream->scheduled, h2_stream_is_ready(stream),
++                      (long)h2_beam_get_buffered(stream->output));
++    }
+     if (task) {
+         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, m->c, /* NO APLOGNO */
+                       H2_STRM_MSG(stream, "->03198: %s %s %s"
+diff --git a/modules/http2/h2_version.h b/modules/http2/h2_version.h
+index d843f25b2d..4c0796dce3 100644
+--- a/modules/http2/h2_version.h
++++ b/modules/http2/h2_version.h
+@@ -26,7 +26,7 @@
+  * @macro
+  * Version number of the http2 module as c string
+  */
+-#define MOD_HTTP2_VERSION "1.10.12"
++#define MOD_HTTP2_VERSION "1.10.13"
+ 
+ /**
+  * @macro
+@@ -34,7 +34,7 @@
+  * release. This is a 24 bit number with 8 bits for major number, 8 bits
+  * for minor and 8 bits for patch. Version 1.2.3 becomes 0x010203.
+  */
+-#define MOD_HTTP2_VERSION_NUM 0x010a0b
++#define MOD_HTTP2_VERSION_NUM 0x010a0d
+ 
+ 
+ #endif /* mod_h2_h2_version_h */
+-- 
+2.17.1
+
