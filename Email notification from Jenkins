@@ -1,0 +1,38 @@
+#!/bin/bash
+set -x
+
+#sudo su -
+sudo apt-get install postfix mailutils libsasl2-2 ca-certificates libsasl2-modules --yes --force-yes
+
+if [ $? -eq 0 ]; then
+echo "apt-get installation for postfix is succesfull"
+else
+
+echo "apt-get installation for postfix is FAILED"
+fi
+##Vim /etc/postfix/main.cf >>   #Adding the below lines in /etc/postfix/main.cf
+
+cat << EOF >> /etc/postfix/main.cf
+relayhost = [smtp.gmail.com]:587
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/postfix/cacert.pem
+smtp_use_tls = yes
+EOF
+> /etc/postfix/sasl_passwd
+cat << EOF >> /etc/postfix/sasl_passwd
+[smtp.gmail.com]:587   apkr408@gmail.com:qykgjcjbhcvytjxd
+
+
+EOF
+
+sudo chmod 400 /etc/postfix/sasl_passwd  ##Fix permission and update postfix config to use sasl_passwd file
+sudo postmap /etc/postfix/sasl_passwd
+
+cat /etc/ssl/certs/thawte_Primary_Root_CA.pem | sudo tee -a /etc/postfix/cacert.pem
+
+sudo /etc/init.d/postfix reload
+echo "Test mail from postfix" | mail -s "Test Postfix" atlapavan8@gmail.com
+
+tail -f /var/log/mail.log
