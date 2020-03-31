@@ -1,0 +1,9 @@
+1.  HOW TO COMMENT MULTIPLE LINE AT A SINGLE SHOT
+press ESC    -->  Go to the line from which you want to start commenting. 
+Then, press ctrl + v, -->  this will enable the visual block mode.
+use the down arrow to select multiple lines that you want to comment.
+Now, press SHIFT + I to enable insert mode.
+Press # and it will add a comment to the first line. 
+Then press ECS and wait for a second, #
+
+2.  
