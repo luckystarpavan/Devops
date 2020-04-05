@@ -9,7 +9,7 @@ provider "aws" {
 resource "aws_key_pair" "tf_demo_1" {
         key_name = "tf_demo_1"
         #public key is in this file --> tf-demo.pub
-$ FILE PATH DIRECTLY
+        #######  Insted of giving code, we can give the "tf-demo.pub" FILE PATH DIRECTLY
         public_key = "${file("tf-demo.pub")}"
 }
 resource "aws_instance" "example" {
@@ -26,3 +26,4 @@ resource "aws_eip" "ip" {
     vpc = true
     instance = aws_instance.example.id
 }
+
