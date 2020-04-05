@@ -19,7 +19,8 @@ resource "aws_key_pair" "tf_demo" {
 resource "aws_instance" "example" {
    ami           = "ami-07ebfd5b3428b6f4d"
    instance_type = "t2.micro"
-   key_name      = "${aws_key_pair.tf_demo.key_name}"
+
+#if require we will user this,--> key_name      = "${aws_key_pair.tf_demo.key_name}"     <-- other wise no required to launch the instance.
    
    tags =  {
      Name = "Terraform_11"
