@@ -13,7 +13,7 @@ provider "aws" {
 
 resource "aws_key_pair" "tf_demo" {
   key_name   = "tf_demo"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDg8lTj/+I6jw4qHIcoxpzClj20RKuFyxC8Cb/j3xpy6V$
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDg8lTj/+I6jw4qHIcoxpzClj20RKuFyxC8Cb/j3xpy6Vj+YmAo8NID/RKQ2nLOwHSuGroelmceKhF44/1z7TIrgo9lq4idsvoGCmmQlWiuUE9wHeCjnML2+80IhuSgAg6acih6Xxq47FDLp2WOBZlL6mL1eE1SiwdDPG8Tpo9/W3fdG03m7nDF3g4ZqAdAQ/w8JkMvkia4pqJ4+sBU6iGehyZbzflWGeNSSCGnb+KAYaPOc23stqaQy/yOca5/ERgNHqf23staBcrrooKsSNxGHSBAH3GZ0XQ0D9m06Oxw3BuJTSqyjGkZWTdheZl6vAqYW76yCXwiY1y7CpDuv6ml ubuntu@ip-192-168-10-43"
 }
 
 resource "aws_instance" "example" {
