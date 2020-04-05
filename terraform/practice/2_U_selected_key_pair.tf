@@ -17,5 +17,8 @@ resource "aws_instance" "example" {
    instance_type = "t2.micro"
 ######by adding below this ( key_name = "MyVPC-DFW-office" ) in resource, we will select the particular key pair for an instance.
    key_name = "MyVPC-DFW-office"
-
+   
+   tags =  {
+     Name = "Terraform_11"
+       }
 }
