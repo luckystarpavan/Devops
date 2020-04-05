@@ -16,7 +16,7 @@ resource "aws_instance" "example" {
   ami = "ami-07ebfd5b3428b6f4d"
   instance_type = "t2.micro"
 
-#  key_name = "${aws_key_pair.tf_demo_1.key_name}"
+  key_name = "${aws_key_pair.tf_demo_1.key_name}"
        tags = {
        Name = "Terraform_11"
        Batch = "7AM"
