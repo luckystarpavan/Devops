@@ -1,3 +1,0 @@
-1. Idempodent :--->  Running "terraform apply" multiple times doesn't change anything.
-2. To generate private and public key in the local system --># ssh-g=keygen -f tf-demo
-3. To connect from one server to another server           --># ssh -i tf-demo ec2-user@34.233.132.176

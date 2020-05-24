@@ -1,0 +1,9 @@
+####################### when you tried same ami number in different region. ##################
+Error: Error launching source instance: InvalidAMIID.NotFound: The image id '[ami-0fc61db8544a617ed]' does not exist
+        status code: 400, request id: 035331aa-c87e-4336-9209-2d3623924f0b
+
+  on main.tf line 12, in resource "aws_instance" "example":
+  12: resource "aws_instance" "example" {
+
+
+##########################
